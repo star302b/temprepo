@@ -68,10 +68,8 @@ jQuery( function($) {
                 }
             });
 
-            if(add_price) {
-                initPrice += add_price;
-                priceElement.html( initPrice.toFixed(2).replace('.', ',') + ' ' + '<span class="woocommerce-Price-currencySymbol">' + currencySymbol + '</span>');
-            }
+            initPrice += add_price;
+            priceElement.html( initPrice.toFixed(2).replace('.', ',') + ' ' + '<span class="woocommerce-Price-currencySymbol">' + currencySymbol + '</span>');
         })
     } );
 });
