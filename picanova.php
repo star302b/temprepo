@@ -6,10 +6,12 @@
     Author: NextG
 */
 
-class Picanova_Plugin {
+class Picanova_Plugin
+{
     private $picanovaApi;
 
-    public function __construct() {
+    public function __construct()
+    {
         global $picanovaApi;
 
         require_once 'inc/PicanovaApi.php';
@@ -32,18 +34,20 @@ class Picanova_Plugin {
         add_filter('woocommerce_cart_item_name', array($this, 'add_custom_session'), 1, 3);
     }
 
-    public function activate() {
-        
+    public function activate()
+    {
     }
 
-    public function load_admin_scripts() {
+    public function load_admin_scripts()
+    {
         wp_enqueue_script('picanova-pl-admin', plugins_url('/assets/js/admin.js', __FILE__), array('jquery'));
         wp_localize_script('picanova-pl-admin', 'ajax_object', array(
             'ajaxurl' => plugins_url('picanova/inc/picanova_functions.php'),
         ));
     }
 
-    public function load_front_scripts() {
+    public function load_front_scripts()
+    {
         wp_register_style('picanova-pl-style', plugins_url('/assets/css/style.css', __FILE__));
         wp_enqueue_style('picanova-pl-style');
         wp_enqueue_script('picanova-pl-front', plugins_url('/assets/js/front.js', __FILE__), array('jquery'));
@@ -94,7 +98,9 @@ class Picanova_Plugin {
                     }
                 }
 
-                wp_localize_script('picanova-pl-front', 'envData',
+                wp_localize_script(
+                    'picanova-pl-front',
+                    'envData',
                     array(
                         'url'     => admin_url('admin-ajax.php'),
                         'options' => $result,
@@ -104,7 +110,8 @@ class Picanova_Plugin {
         }
     }
 
-    public function save_custom_field_variations($variation_id, $i) {
+    public function save_custom_field_variations($variation_id, $i)
+    {
         $custom_field = $_POST['picanova_variation'][$i];
         if (!empty($custom_field)) {
             update_post_meta($variation_id, 'picanova_variation', esc_attr($custom_field));
@@ -113,7 +120,8 @@ class Picanova_Plugin {
         }
     }
 
-    public function add_cart_item_data($cart_item_data, $product_id, $variation_id) {
+    public function add_cart_item_data($cart_item_data, $product_id, $variation_id)
+    {
         if (isset($_POST["add_option"]) && isset($_POST["variation_id"])) {
             $id = get_post_meta($_POST["product_id"], 'picanova_product', true);
             $picanonaVariations = $this->picanovaApi->getVariations($id);
@@ -147,7 +155,8 @@ class Picanova_Plugin {
         return $cart_item_data;
     }
 
-    public function before_calculate_totals($cart_obj) {
+    public function before_calculate_totals($cart_obj)
+    {
         if (is_admin() && !defined('DOING_AJAX')) {
             return;
         }
@@ -163,7 +172,8 @@ class Picanova_Plugin {
         }
     }
 
-    public function add_custom_session($product_name, $values, $cart_item_key) {
+    public function add_custom_session($product_name, $values, $cart_item_key)
+    {
         $return_string = $product_name . "<br />";
 
         foreach ($values["addons"] as $addon) {
@@ -177,7 +187,8 @@ class Picanova_Plugin {
         return $return_string;
     }
 
-    public function calculate_new_price($percentage_rate, $base_price) {
+    public function calculate_new_price($percentage_rate, $base_price)
+    {
         if ($percentage_rate > 0) {
             $base_price = $base_price * (1 + ($percentage_rate / 100));
         } else {

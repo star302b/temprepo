@@ -10,7 +10,8 @@ class PicanovaApi
 
     private $apiCreds;
 
-    public function __construct() {
+    public function __construct()
+    {
         $this->apiCreds = array(
             'API_User' => get_option('picanova_api_user'),
             'API_Key' => get_option('picanova_api_key'),
@@ -19,33 +20,40 @@ class PicanovaApi
 
     public function getProducts()
     {
-        return json_decode($this->request($this->product_url ));
+        return json_decode($this->request($this->product_url));
     }
 
     public function getVariations($id)
     {
-        return json_decode($this->request($this->variations_url . $id ));
+        return json_decode($this->request($this->variations_url . $id));
     }
 
 
-    public function getVariationId($product_id, $code) {
+    public function getVariationId($product_id, $code)
+    {
         $id = get_post_meta($product_id, 'picanova_product', true);
-        
-        $picanonaVariations = $this->getVariations($id);
+
+        $picanonaVariations = get_transient( 'picanova_product_variations_' . $id );
+        if( ! $picanonaVariations ) {
+            $picanonaVariations = $this->getVariations($id);
+            set_transient( 'picanova_product_variations_' . $id, $picanonaVariations, DAY_IN_SECONDS );
+        }
 
         foreach ($picanonaVariations->data as $picanonaVariation) {
-            if($picanonaVariation->code == $code) {
+            if ($picanonaVariation->code == $code) {
                 $variant_id = $picanonaVariation->id;
             }
         }
         return $variant_id;
     }
 
-    public function getCountriesList(){
-        return json_decode($this->request($this->countries_url ), true)["data"] ?? [];
+    public function getCountriesList()
+    {
+        return json_decode($this->request($this->countries_url), true)["data"] ?? [];
     }
 
-    public function getShippingRates( $country_id, $card_items ){
+    public function getShippingRates($country_id, $card_items)
+    {
 
         $data = [
             'shipping' => [
@@ -54,10 +62,10 @@ class PicanovaApi
             'items' => $card_items
         ];
 
-        return json_decode($this->request($this->shipping_rates, $data ), true)['data'] ?? [];
+        return json_decode($this->request($this->shipping_rates, $data), true)['data'] ?? [];
     }
 
-    private function request($url, $data = [] )
+    private function request($url, $data = [])
     {
         $result = "";
         try {
@@ -69,24 +77,23 @@ class PicanovaApi
             }
             $headers = array(
                 'accept: application/json',
-                'Authorization: Basic '.base64_encode($this->apiCreds['API_User'].":".$this->apiCreds['API_Key'])
+                'Authorization: Basic ' . base64_encode($this->apiCreds['API_User'] . ":" . $this->apiCreds['API_Key'])
             );
 
-            if( ! empty( $data ) ) {
+            if (!empty($data)) {
 
                 $jsonData = json_encode($data);
 
-                curl_setopt( $ch, CURLOPT_CUSTOMREQUEST, 'POST');
-                curl_setopt( $ch, CURLOPT_POSTFIELDS, $jsonData);
+                curl_setopt($ch, CURLOPT_CUSTOMREQUEST, 'POST');
+                curl_setopt($ch, CURLOPT_POSTFIELDS, $jsonData);
 
                 $headers[] = 'Content-Type: application/json';
-
             }
 
-            
+
             curl_setopt($ch, CURLOPT_URL, $url);
             curl_setopt($ch, CURLOPT_HTTPHEADER, $headers);
-         //   curl_setopt($ch, CURLOPT_CONNECTTIMEOUT, 30);
+            //   curl_setopt($ch, CURLOPT_CONNECTTIMEOUT, 30);
             curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
             curl_setopt($ch, CURLOPT_HEADER, 0);
 
@@ -100,16 +107,18 @@ class PicanovaApi
 
             // Close curl handle
             curl_close($ch);
-        } catch(Exception $e) {
+        } catch (Exception $e) {
 
-            trigger_error(sprintf(
-                'Curl failed with error #%d: %s',
-                $e->getCode(), $e->getMessage()),
-                E_USER_ERROR);
-
+            trigger_error(
+                sprintf(
+                    'Curl failed with error #%d: %s',
+                    $e->getCode(),
+                    $e->getMessage()
+                ),
+                E_USER_ERROR
+            );
         }
 
         return $result;
     }
-
 }
